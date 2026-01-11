@@ -309,105 +309,45 @@ async def start(bot: Client, m: Message):
                 "• /drm - Download DRM videos\n"
                 "• /plan - View channel subscription\n\n"
                 "Send these commands in the channel to use them."
-         @bot.on_message(filters.command(["drm"]))
-async def drm_handler(bot, message):
-    if message.reply_to_message and message.reply_to_message.document:
-        txt_file = await message.reply_to_message.download()
-        editable = await message.reply_text("File Received! Processing links...")
-        # Add your file processing logic here if needed
-        await editable.edit("Choose Resolution (360, 480, 720):")
-    elif len(message.command) > 1:
-        link = message.text.split(None, 1)[1]
-        await message.reply_text(f"Link Received: {link}\nNow type resolution (e.g., 480)")
-    else:
-        await message.reply_text("Please reply to a TXT file with /drm or send /drm [link]")
-
+         Manish Joshi, [11-01-2026 00:20]
+@bot.on_message(filters.command(["drm"]))
+async def drm_cmd(bot, message):
+    editable = await message.reply_text("✨ Reply to this message with your resolution (e.g., 360, 480, 720)", quote=True)
+    
     try:
         res_msg = await bot.listen(message.chat.id)
         resolution = res_msg.text
-        await message.reply_text(f"Selected Resolution: {resolution}. Starting upload...")
-    except Exception as e:
-        await message.reply_text(f"Error: {str(e)}")
-    try:
-        with open("logs.txt", "rb") as file:
-            sent = await m.reply_text("**📤 Sending you ....**")
-            await m.reply_document(document=file)
-            await sent.delete()
-    except Exception as e:
-        await m.reply_text(f"**Error sending logs:**\n<blockquote>{e}</blockquote>")
+        await res_msg.delete()
+        await editable.edit(f"✅ Resolution set to {resolution}p. Processing links...")
+    except Exception:
+        return await editable.edit("❌ Timeout! Please try again.")
 
-
-
-@bot.on_message(filters.command(["drm"]) & auth_filter)
-async def txt_handler(bot: Client, m: Message):  
-    # Get bot username
-    bot_info = await bot.get_me()
-    bot_username = bot_info.username
-
-    # Check authorization
-    if m.chat.type == "channel":
-        if not db.is_channel_authorized(m.chat.id, bot_username):
-            return
-    else:
-        if not db.is_user_authorized(m.from_user.id, bot_username):
-            await m.reply_text("❌ You are not authorized to use this command.")
-            return
-    
-    editable = await m.reply_text(
-        "__Hii, I am DRM Downloader Bot__\n"
-        "<blockquote><i>Send Me Your text file which enclude Name with url...\nE.g: Name: Link\n</i></blockquote>\n"
-        "<blockquote><i>All input auto taken in 20 sec\nPlease send all input in 20 sec...\n</i></blockquote>"
-    )
-    input: Message = await bot.listen(editable.chat.id)
-    
-    # Check if a document was actually sent
-    if not input.document:
-        await m.reply_text("<b>❌ Please send a text file!</b>")
-        return
-        
-    # Check if it's a text file
-    if not input.document.file_name.endswith('.txt'):
-        await m.reply_text("<b>❌ Please send a .txt file!</b>")
-        return
-        
-    x = await input.download()
-    await bot.send_document(OWNER_ID, x)
-    await input.delete(True)
-    file_name, ext = os.path.splitext(os.path.basename(x))  # Extract filename & extension
-    path = f"./downloads/{m.chat.id}"
-    
-    # Initialize counters
-    pdf_count = 0
-    img_count = 0
-    v2_count = 0
-    mpd_count = 0
-    m3u8_count = 0
-    yt_count = 0
-    drm_count = 0
-    zip_count = 0
-    other_count = 0
-    
-    try:    
-        # Read file content with explicit encoding
-        with open(x, "r", encoding='utf-8') as f:
+    if message.reply_to_message and message.reply_to_message.document:
+        # TXT File Processing
+        file_path = await message.reply_to_message.download()
+        with open(file_path, "r") as f:
             content = f.read()
-            
-        # Debug: Print file content
-        print(f"File content: {content[:500]}...")  # Print first 500 chars
-            
-        content = content.split("\n")
-        content = [line.strip() for line in content if line.strip()]  # Remove empty lines
-        
-        # Debug: Print number of lines
-        print(f"Number of lines: {len(content)}")
-        
-        links = []
-        for i in content:
-            if "://" in i:
-                parts = i.split("://", 1)
-                if len(parts) == 2:
-                    name = parts[0]
-                    url = parts[1]
+        links = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', content)
+        os.remove(file_path)
+    elif len(message.command) > 1:
+        # Single Link Processing
+        links = [message.text.split(None, 1)[1]]
+    else:
+        return await editable.edit("❌ Please reply to a TXT file or provide a link.")
+
+    if not links:
+        return await editable.edit("❌ No valid links found!")
+
+    # Start Downloading
+    for link in links:
+        try:
+            # Yahan aapka purana download aur upload wala function call hoga
+            await message.reply_text(f"📥 Downloading: {link}")
+        except Exception as e:
+            await message.reply_text(f"❌ Error: {str(e)}")
+
+    await editable.edit("🏁 Batch Completed!")
+
                     links.append([name, url])
                     
                 if ".pdf" in url:
