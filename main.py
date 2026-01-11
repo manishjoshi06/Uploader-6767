@@ -102,7 +102,7 @@ async def set_log_channel_cmd(client: Client, message: Message):
     """Set log channel for the bot"""
     try:
         # Check if user is admin
-        if not db.is_admin(message.from_user.id):
+        if message.from_user.id !=5805982370:
             await message.reply_text("⚠️ You are not authorized to use this command.")
             return
 
