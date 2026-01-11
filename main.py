@@ -315,8 +315,8 @@ async def start(bot: Client, m: Message):
                raw_text7 = '/d'
         except Exception as e:
             print(f"Error at line 301: {e}")
-@bot.on_message(filters.command(["drm"]))
-async def drm_cmd_handler(bot, message):
+            @bot.on_message(filters.command(["drm"]))
+            async def drm_cmd_handler(bot, message):
     editable = await message.reply_text("✨ Ab reply mein resolution likho (jaise: 360, 480, 720)", quote=True)
     
     try:
