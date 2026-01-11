@@ -309,106 +309,25 @@ async def start(bot: Client, m: Message):
                 "• /drm - Download DRM videos\n"
                 "• /plan - View channel subscription\n\n"
                 "Send these commands in the channel to use them."
-            )
-        else:
-            # Check user authorization
-            is_authorized = db.is_user_authorized(m.from_user.id, bot.me.username)
-            is_admin = db.is_admin(m.from_user.id)
-            
-            if not is_authorized:
-                await m.reply_photo(
-                    photo=photologo,
-                    caption="**Mʏ Nᴀᴍᴇ [DRM Wɪᴢᴀʀᴅ 🦋](https://t.me/ITsGOLU_OWNER_BOT)\n\nYᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀᴄᴄᴇꜱꜱ ᴛᴏ ᴜꜱᴇ ᴛʜɪꜱ ʙᴏᴛ\nCᴏɴᴛᴀᴄᴛ [𝐈𝐓'𝐬𝐆𝐎𝐋𝐔.™®](https://t.me/ITsGOLU_OWNER_BOT) ғᴏʀ ᴀᴄᴄᴇꜱꜱ**",
-                    reply_markup=InlineKeyboardMarkup([
-    [
-        InlineKeyboardButton("𝐈𝐓'𝐬𝐆𝐎𝐋𝐔.™®", url="https://t.me/ITsGOLU_OWNER_BOT")
-    ],
-    [
-        InlineKeyboardButton("ғᴇᴀᴛᴜʀᴇꜱ 🪔", callback_data="features"),
-        InlineKeyboardButton("ᴅᴇᴛᴀɪʟꜱ 🦋", callback_data="details")
-    ]
-])
-                )
-                return
-                
-            commands_list = (
-                "**>  /drm - ꜱᴛᴀʀᴛ ᴜᴘʟᴏᴀᴅɪɴɢ ᴄᴘ/ᴄᴡ ᴄᴏᴜʀꜱᴇꜱ**\n"
-                "**>  /plan - ᴠɪᴇᴡ ʏᴏᴜʀ ꜱᴜʙꜱᴄʀɪᴘᴛɪᴏɴ ᴅᴇᴛᴀɪʟꜱ**\n"
-            )
-            
-            if is_admin:
-                commands_list += (
-                    "\n**👑 Admin Commands**\n"
-                    "• /users - List all users\n"
-                )
-            
-            await m.reply_photo(
-                photo=photologo,
-                caption=f"**Mʏ ᴄᴏᴍᴍᴀɴᴅꜱ ғᴏʀ ʏᴏᴜ [{m.from_user.first_name} ](tg://settings)**\n\n{commands_list}",
-                reply_markup=InlineKeyboardMarkup([
-    [
-        InlineKeyboardButton("𝐈𝐓'𝐬𝐆𝐎𝐋𝐔.™®", url="https://t.me/ITsGOLU_OWNER_BOT")
-    ],
-    [
-        InlineKeyboardButton("ғᴇᴀᴛᴜʀᴇꜱ 🪔", callback_data="features"),
-        InlineKeyboardButton("ᴅᴇᴛᴀɪʟꜱ 🦋", callback_data="details")
-    ]])
-)
-            
-    except Exception as e:
-        print(f"Error in start command: {str(e)}")
-
-
-def auth_check_filter(_, client, message):
-    try:
-        # For channel messages
-        if message.chat.type == "channel":
-            return db.is_channel_authorized(message.chat.id, client.me.username)
-        # For private messages
-        else:
-            return db.is_user_authorized(message.from_user.id, client.me.username)
-    except Exception:
-        return False
-
-auth_filter = filters.create(auth_check_filter)
-
-@bot.on_message(~auth_filter & filters.private & filters.command)
-async def unauthorized_handler(client, message: Message):
-    await message.reply(
-        "<b>Mʏ Nᴀᴍᴇ [DRM Wɪᴢᴀʀᴅ 🦋](https://t.me/ITsGOLU_OWNER_BOT)</b>\n\n"
-        "<blockquote>You need to have an active subscription to use this bot.\n"
-        "Please contact admin to get premium access.</blockquote>",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("💫 Get Premium Access", url="https://t.me/ITsGOLU_OWNER_BOT")
-        ]])
-    )
-
-@bot.on_message(filters.command(["id"]))
-async def id_command(client, message: Message):
-    chat_id = message.chat.id
-    await message.reply_text(
-        f"<blockquote>The ID of this chat id is:</blockquote>\n`{chat_id}`"
-    )
-
-
-
-@bot.on_message(filters.command(["t2h"]))
-async def call_html_handler(bot: Client, message: Message):
-    await html_handler(bot, message)
-    
-
-@bot.on_message(filters.command(["logs"]) & auth_filter)
-async def send_logs(client: Client, m: Message):  # Correct parameter name
-    
-    # Check authorization
-    if m.chat.type == "channel":
-        if not db.is_channel_authorized(m.chat.id, bot_username):
-            return
+         @bot.on_message(filters.command(["drm"]))
+async def drm_handler(bot, message):
+    if message.reply_to_message and message.reply_to_message.document:
+        txt_file = await message.reply_to_message.download()
+        editable = await message.reply_text("File Received! Processing links...")
+        # Add your file processing logic here if needed
+        await editable.edit("Choose Resolution (360, 480, 720):")
+    elif len(message.command) > 1:
+        link = message.text.split(None, 1)[1]
+        await message.reply_text(f"Link Received: {link}\nNow type resolution (e.g., 480)")
     else:
-        if not db.is_user_authorized(m.from_user.id, bot_username):
-            await m.reply_text("❌ You are not authorized to use this command.")
-            return
-            
+        await message.reply_text("Please reply to a TXT file with /drm or send /drm [link]")
+
+    try:
+        res_msg = await bot.listen(message.chat.id)
+        resolution = res_msg.text
+        await message.reply_text(f"Selected Resolution: {resolution}. Starting upload...")
+    except Exception as e:
+        await message.reply_text(f"Error: {str(e)}")
     try:
         with open("logs.txt", "rb") as file:
             sent = await m.reply_text("**📤 Sending you ....**")
