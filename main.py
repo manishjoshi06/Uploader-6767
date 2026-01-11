@@ -303,16 +303,16 @@ async def start(bot: Client, m: Message):
             if not db.is_channel_authorized(m.chat.id, bot.me.username):
                 return
                 
+           try:
             await m.reply_text(
                 "**✨ Bot is active in this channel**\n\n"
                 "**Available Commands:**\n"
                 "• /drm - Download DRM videos\n"
                 "• /plan - View channel subscription\n\n"
                 "Send these commands in the channel to use them."
-                
-         
-    except asyncio.TimeoutError:
-        raw_text7 = '/d'
+            )
+            except asyncio.TimeoutError:
+               raw_text7 = '/d'
 
 @bot.on_message(filters.command(["drm"]))
 async def drm_cmd_handler(bot, message):
