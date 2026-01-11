@@ -317,27 +317,27 @@ async def start(bot: Client, m: Message):
             print(f"Error at line 301: {e}")
             @bot.on_message(filters.command(["drm"]))
             async def drm_cmd_handler(bot, message):
-    editable = await message.reply_text("✨ Ab reply mein resolution likho (jaise: 360, 480, 720)", quote=True)
+        editable = await message.reply_text("✨ Ab reply mein resolution likho (jaise: 360, 480, 720)", quote=True)
+        
+        try:
+            res_msg = await bot.listen(message.chat.id, timeout=300)
+            resolution = "".join(filter(str.isdigit, res_msg.text))
+            await res_msg.delete()
+            await editable.edit(f"✅ Resolution set to {resolution}p. Processing links...")
+        except Exception:
+            return await editable.edit("❌ Timeout! Please try again.")
     
-    try:
-        res_msg = await bot.listen(message.chat.id, timeout=300)
-        resolution = "".join(filter(str.isdigit, res_msg.text))
-        await res_msg.delete()
-        await editable.edit(f"✅ Resolution set to {resolution}p. Processing links...")
-    except Exception:
-        return await editable.edit("❌ Timeout! Please try again.")
-
-    links = []
-    if message.reply_to_message and message.reply_to_message.document:
-        file_path = await message.reply_to_message.download()
-        with open(file_path, "r") as f:
-            content = f.read()
-        links = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', content)
-        os.remove(file_path)
-    elif len(message.command) > 1:
-        links = [message.text.split(None, 1)[1]]
-    else:
-        return await editable.edit("❌ Please reply to a TXT file or provide a link.")
+        links = []
+        if message.reply_to_message and message.reply_to_message.document:
+            file_path = await message.reply_to_message.download()
+            with open(file_path, "r") as f:
+                content = f.read()
+            links = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', content)
+            os.remove(file_path)
+        elif len(message.command) > 1:
+            links = [message.text.split(None, 1)[1]]
+        else:
+            return await editable.edit("❌ Please reply to a TXT file or provide a link.")
 
     if not links:
         return await editable.edit("❌ No valid links found!")
